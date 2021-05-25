@@ -1,5 +1,5 @@
-proc1: p1.c
-		gcc -o pl p1.c
+proc1: p4.c
+		gcc -o p4 p4.c -pthread
 
 clean:
-		rm *.o pl a.out
+		rm *.o p4 a.out
