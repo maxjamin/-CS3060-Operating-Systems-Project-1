@@ -1,6 +1,7 @@
 #include <stdio.h>
-#include<stdlib.h>
-#include<pthread.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <unistd.h>
 
 /* Created by: Ben Smith
  * Class: CS3060 X01 summer 2021 B1
@@ -43,8 +44,9 @@ Number_of_factors  *array_factors; //for consumer
 
 void *consumer(void *ptr)
 {
-	while(1)
+	while(counter_in_factors > 0 || counter_in_vars > 0)
 	{
+
 		pthread_mutex_lock(&factors); //lock_mutex
 
 			//check if buffer is empty
@@ -66,7 +68,7 @@ void *consumer(void *ptr)
 
 	}
 
-
+	return 0;
 }
 
 int trial_divison(void *number_of_factors)
@@ -77,7 +79,6 @@ int trial_divison(void *number_of_factors)
 									number_of_factors;	
 		int factor = 2;
 		int number = ptr->base_number;
-		//printf("Base %d\n", number );
 		while(number > 1)
 		{
 			if(number % factor == 0)
@@ -96,7 +97,7 @@ int trial_divison(void *number_of_factors)
 
 void *producer(void *ptr)
 {
-	while(1) {
+	while(counter_in_vars > 0 || place_in_args < sizeof_input) {
 
 		pthread_mutex_lock(&variables); //lock mutex
 			//check if buffer is empty
@@ -131,6 +132,7 @@ void *producer(void *ptr)
 		pthread_mutex_unlock(&variables); //unlock mutex
 
 	}
+	return 0;
 }
 
 int main(int argc, char *argv[])
@@ -138,6 +140,12 @@ int main(int argc, char *argv[])
 	array_variables = calloc(1, sizeof(int)*variables_buffer_size);
 	array_factors = calloc(1, sizeof(Number_of_factors)
 					*factors_buffer_size);
+
+	if(argc <= 1)
+	{
+		printf("Usage:./p4 <number to factor>...\n");
+		return 1;
+	}
 
 	pthread_t child, consumer_child;
 	pthread_mutex_init(&variables, NULL);
@@ -158,9 +166,6 @@ int main(int argc, char *argv[])
 					, NULL
 					, consumer
 					, NULL);
-
-
-	printf("Size of argc %d \n", argc);
 
 	place_in_vars = 0;
 	place_out_vars = 0;
@@ -194,5 +199,6 @@ int main(int argc, char *argv[])
 	
 	}
 
+	pthread_join(consumer_child, NULL);
 	pthread_join(child, NULL);
 }
